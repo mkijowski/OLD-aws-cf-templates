@@ -1,0 +1,157 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  CEG4420: This template builds a VPC with a Ubuntu server instance with Kali linux tools installed via Katoolin3.
+Parameters:
+  KaliInstanceType:
+    Description: Kali Linux instance type
+    Type: String
+    Default: t2.small
+    AllowedValues:
+      - t2.small
+    ConstraintDescription: must be a valid EC2 instance type t2.small or larger.
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+  SSHLocation:
+    Description: ' The IP address range that can be used to access the EC2 instance'
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    Default: 0.0.0.0/0
+    AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+Mappings:
+  AWSInstanceType2Arch:  # Supported architectures (x64bit only)
+    t2.small:
+      Arch: HVM64
+    t2.small:
+      Arch: HVM64
+    t2.micro:
+      Arch: HVM64
+  AWSRegionKali: # AMI for Kali in each supported region 
+    us-east-1:   # N. Virginia
+      PV64: NOT_SUPPORTED
+      HVM64: ami-0a9d1fb432971483f
+      HVMG2: NOT_SUPPORTED
+    us-east-2:   # Ohio
+      PV64: NOT_SUPPORTED
+      HVM64: NOT_SUPPORTED
+      HVMG2: NOT_SUPPORTED
+    us-west-1:   # N. California
+      PV64: NOT_SUPPORTED
+      HVM64: NOT_SUPPORTED
+      HVMG2: NOT_SUPPORTED
+    us-west-2:   # Oregon
+      PV64: NOT_SUPPORTED
+      HVM64: NOT_SUPPORTED
+      HVMG2: NOT_SUPPORTED
+Resources:
+  VPC:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      Tags:
+        - Key: Application
+          Value: !Ref 'AWS::StackId'
+        - Key: Name
+          Value: CEG 4420 VPC
+  Subnet:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.0.0/24
+      Tags:
+        - Key: Application
+          Value: !Ref 'AWS::StackId'
+  InternetGateway:
+    Type: 'AWS::EC2::InternetGateway'
+    Properties:
+      Tags:
+        - Key: Application
+          Value: !Ref 'AWS::StackId'
+  AttachGateway:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+  RouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Application
+          Value: !Ref 'AWS::StackId'
+  Route:
+    Type: 'AWS::EC2::Route'
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  SubnetRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref Subnet
+      RouteTableId: !Ref RouteTable
+  KaliIPAddress:
+    Type: 'AWS::EC2::EIP'
+    DependsOn: AttachGateway
+    Properties:
+      Domain: vpc
+      InstanceId: !Ref KaliInstance
+  KaliSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Enable SSH access via port 22 and open ports 1025 through 2048.
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: !Ref SSHLocation
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 130.108.0.0/16  # WSU CIDR
+        - IpProtocol: tcp
+          FromPort: '1025'
+          ToPort: '2048'
+          CidrIp: !Ref SSHLocation
+        - IpProtocol: tcp
+          FromPort: '1025'
+          ToPort: '2048'
+          CidrIp: 130.108.0.0/16  # WSU CIDR
+        - IpProtocol: -1
+          FromPort: '-1'
+          ToPort: '-1'
+          CidrIp: 10.0.0.0/16
+  KaliInstance:
+    Type: 'AWS::EC2::Instance'
+    DependsOn: AttachGateway
+    Properties:
+      ImageId: !FindInMap 
+        - AWSRegionKali
+        - !Ref 'AWS::Region'
+        - !FindInMap 
+          - AWSInstanceType2Arch
+          - !Ref KaliInstanceType
+          - Arch
+      InstanceType: !Ref KaliInstanceType
+      KeyName: !Ref KeyName
+      Tags:
+        - Key: Application
+          Value: !Ref 'AWS::StackId'
+        - Key: Name
+          Value: 4420-Kali
+      NetworkInterfaces:
+        - GroupSet:
+            - !Ref KaliSecurityGroup
+          AssociatePublicIpAddress: 'true'
+          DeviceIndex: '0'
+          DeleteOnTermination: 'true'
+          SubnetId: !Ref Subnet
+          PrivateIpAddress: 10.0.0.20
+
+
+

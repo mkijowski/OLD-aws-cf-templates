@@ -64,7 +64,7 @@ Resources:
         - Key: Application
           Value: !Ref 'AWS::StackId'
         - Key: Name
-          Value: CEG-4110-VPC
+          Value: CEG 4110 VPC
   Subnet:
     Type: 'AWS::EC2::Subnet'
     Properties:
@@ -236,7 +236,7 @@ Resources:
         - Key: Application
           Value: !Ref 'AWS::StackId'
         - Key: Name
-          Value: CEG-4110-Instance
+          Value: CEG 4110 Webserver
       NetworkInterfaces:
         - GroupSet:
             - !Ref InstanceSecurityGroup

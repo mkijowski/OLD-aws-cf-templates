@@ -1,7 +1,13 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
-  Testing area for AWS: This template builds a linux VM for CEG 2350 @ WSU.
+  CEG 7140: This template builds a VPC with a Ubuntu server.
 Parameters:
+  UbuntuInstanceType:
+    Description: Windows Server instance type
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
   KeyName:
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
     Type: 'AWS::EC2::KeyPair::KeyName'
@@ -16,12 +22,28 @@ Parameters:
     ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
 Mappings:
   AWSInstanceType2Arch:  # Supported architectures (x64bit only)
+    t2.small:
+      Arch: HVM64
+    t2.small:
+      Arch: HVM64
     t2.micro:
       Arch: HVM64
   AWSRegionUbuntu: # AMI for Ubuntu server in each supported region 
     us-east-1:   # N. Virginia
       PV64: NOT_SUPPORTED
-      HVM64: ami-07d0cf3af28718ef8
+      HVM64: ami-06c1d7addb12a814e
+      HVMG2: NOT_SUPPORTED
+    us-east-2:   # Ohio
+      PV64: NOT_SUPPORTED
+      HVM64: NOT_SUPPORTED
+      HVMG2: NOT_SUPPORTED
+    us-west-1:   # N. California
+      PV64: NOT_SUPPORTED
+      HVM64: NOT_SUPPORTED
+      HVMG2: NOT_SUPPORTED
+    us-west-2:   # Oregon
+      PV64: NOT_SUPPORTED
+      HVM64: NOT_SUPPORTED
       HVMG2: NOT_SUPPORTED
 Resources:
   VPC:
@@ -32,7 +54,7 @@ Resources:
         - Key: Application
           Value: !Ref 'AWS::StackId'
         - Key: Name
-          Value: Lab 0-1 VPC CEG4900
+          Value: Example VPC
   Subnet:
     Type: 'AWS::EC2::Subnet'
     Properties:
@@ -76,12 +98,12 @@ Resources:
     DependsOn: AttachGateway
     Properties:
       Domain: vpc
-      InstanceId: !Ref PublicUbuntuInstance
-  Lab1SecurityGroup:
+      InstanceId: !Ref UbuntuInstance
+  UbuntuSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
       VpcId: !Ref VPC
-      GroupDescription: Enable SSH access via port 22 and open all insternal ports.
+      GroupDescription: Enable SSH access via port 22 and open ports 1025 through 2048.
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: '22'
@@ -91,15 +113,19 @@ Resources:
           FromPort: '22'
           ToPort: '22'
           CidrIp: 130.108.0.0/16  # WSU CIDR
+        - IpProtocol: tcp
+          FromPort: '1025'
+          ToPort: '2048'
+          CidrIp: !Ref SSHLocation
+        - IpProtocol: tcp
+          FromPort: '1025'
+          ToPort: '2048'
+          CidrIp: 130.108.0.0/16  # WSU CIDR
         - IpProtocol: -1
           FromPort: '-1'
           ToPort: '-1'
-          CidrIp: 10.0.0.0/24
-        - IpProtocol: tcp
-          FromPort: '1'
-          ToPort: '65535'
-          CidrIp: 0.0.0.0/0
-  PublicUbuntuInstance:
+          CidrIp: 10.0.0.0/16
+  UbuntuInstance:
     Type: 'AWS::EC2::Instance'
     DependsOn: AttachGateway
     Properties:
@@ -108,41 +134,22 @@ Resources:
         - !Ref 'AWS::Region'
         - !FindInMap 
           - AWSInstanceType2Arch
-          - t2.micro
+          - !Ref UbuntuInstanceType
           - Arch
-      InstanceType: t2.micro
+      InstanceType: !Ref UbuntuInstanceType
       KeyName: !Ref KeyName
       Tags:
         - Key: Application
           Value: !Ref 'AWS::StackId'
         - Key: Name
-          Value: Lab 0-1 Ubuntu 1
+          Value: CEG 7140 Ubuntu
       NetworkInterfaces:
         - GroupSet:
-            - !Ref Lab1SecurityGroup
+            - !Ref UbuntuSecurityGroup
           AssociatePublicIpAddress: 'true'
           DeviceIndex: '0'
           DeleteOnTermination: 'true'
           SubnetId: !Ref Subnet
           PrivateIpAddress: 10.0.0.25
-      UserData:
-        Fn::Base64:
-          !Sub |
-            #!/bin/bash -xe
-            apt-get update && \
-            apt-get install -y \
-              python \
-              nmap \
-              vim \
-              git \
-              wget \
-              make \
-              cmake \
-              openjdk-11-jdk \
-              build-essential \
-              python-dev \
-              python3-dev && \
-            reboot
-
 
 
