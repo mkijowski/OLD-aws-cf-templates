@@ -4,7 +4,7 @@
 The purpose of this document is to familiarize yourself with the lab space we will be
 using for this course.  You should have received an email from `support@awseducate.com`
 regarding your AWS Educate account for this class.  We will be using AWS to
-create virtual environments for you to use to complete the tasks given.
+create virtual environments for you to use in your assignments.
 
 ### Objectives
 1. Complete the AWS Educate Registration
@@ -12,6 +12,8 @@ create virtual environments for you to use to complete the tasks given.
 3. Create a SSH keypair in AWS
 4. Create a test environment via AWS CloudFormation link
 5. Install required software and make a connection to the AWS environment
+
+---
 
 ### Complete the AWS Educate Registration
 Note: this step is for first time students using AWS Educate only, returning students can
@@ -27,7 +29,9 @@ code.  Many browser autofill programs will enter your zip code here and will cau
 
 Confirm your account via email and sign in here: https://www.awseducate.com/signin/SiteLogin
 
-### Sign in to the AWS Console via AWS educate
+---
+
+### Sign in to the AWS Console via AWS Educate
 Assuming you have registered for AWS Educate and have access to this class 
 perform the following:
 
@@ -41,6 +45,8 @@ perform the following:
   
   Your username in the top right should look something like this
   `vocstartsoft/user236529=lastname.number@wright.edu`.
+
+---
 
 ### Create a SSH keypair in AWS
 You should be at the main AWS Console for your course.  If not follow the steps in the previous section.
@@ -59,6 +65,8 @@ once provisioned.
 * **Do not lose this private key.**  Doing so will prevent you from being
   able to access any labs created with it.  If you do lose it simply delete it
   from AWS and create a new one.
+
+---
 
 ### Create a test environment via AWS CloudFormation link
 Once you have created your SSH key you are able to provision any of the resources
@@ -81,16 +89,7 @@ Once you have created the AWS Cloud formation stack you can [return to the EC2 s
 *Note: There are no questions to answer in Task 1.  Please just document your
 experience creating the lab environment.*
 
-### Task 2 - Connecting to the AWS environment
-**You are now ready to make an SSH connection to your AWS server.**  Using
-MobaXterm perform the following actions:
-* Create/copy the AWS private SSH key to your home directory
-* Make the key only readable by your user (`chmod 600 /path/to/private/key`)
-* Obtain the username for the system from the instructions provided to you alongside the CF link
-* SSH into your AWS server with the following (replace */path/to/private/key*
-  and *ElasticIP* with your information):
-  `ssh -i /path/to/private/key username@ElasticIP`
-  
+---
 
 ###### Install required software for Windows
 We are going to be making many connections to Linux servers via SSH, some will
@@ -106,3 +105,14 @@ have a better suggestion send it to Matt Kijowski).
   (username/password)
 * [Install MobaXterm Home Edition](https://mobaxterm.mobatek.net/download.html)
 
+---
+
+### Connecting to the AWS environment
+**You are now ready to make an SSH connection to your AWS server.**  Using
+MobaXterm perform the following actions:
+* Create/copy the AWS private SSH key to your home directory
+* Make the key only readable by your user (`chmod 600 /path/to/private/key`)
+* Obtain the username for the system from the instructions provided to you alongside the CF link
+* SSH into your AWS server with the following (replace */path/to/private/key*
+  and *ElasticIP* with your information):
+  `ssh -i /path/to/private/key username@ElasticIP`
