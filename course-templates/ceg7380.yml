@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
-  Testing area for AWS: This template builds a VPC with a Ubuntu server.
+  CEG 7380: This template builds a VPC with a Ubuntu server.
 Parameters:
   UbuntuInstanceType:
     Description: Windows Server instance type

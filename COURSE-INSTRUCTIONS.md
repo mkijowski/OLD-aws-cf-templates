@@ -72,10 +72,12 @@ once provisioned.
 Once you have created your SSH key you are able to provision any of the resources
 provided via Cloud Formation links.  A Cloud Formation link is a template that describes
 a set of resources that will be created in your AWS account.  Cloud Formation links will 
-open in another AWS service called Cloud Formation (AWS CF).  The CF link will 
-automatically fill most of the fields necessary.  You will need to enter the following:
+open in another AWS service called Cloud Formation (AWS CF).
+
+Make sure you are signed into the AWS Console (via AWS Educate), then perform the following:
+* Click on the Cloud Formation link provided to you for your course or assignment (if you are just testing use [this link]())
 * select the SSH key you just created from the drop down menu
-* Enter a CIDR formatted IP address for extra security (or keep the default of 0.0.0.0/0)
+* Enter a CIDR formatted IP address for extra security (or keep the default of `0.0.0.0/0`)
 * Accept the rest of the defaults (keep clicking next/agree/create) to finalize creation of your lab space.
 
 Most resources should provision in approximately 5 minutes (Windows systems can take > 30 minutes).
@@ -85,9 +87,6 @@ Once you have created the AWS Cloud formation stack you can [return to the EC2 s
   to see information about the servers created as a part of the cloud formation
   template.  You will need to retrieve the Elastic IP of the Ubuntu instance by
   selecting it and looking at the information in the Description below.
-
-*Note: There are no questions to answer in Task 1.  Please just document your
-experience creating the lab environment.*
 
 ---
 

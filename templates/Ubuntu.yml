@@ -1,14 +1,13 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
-  CEG 4420: This template builds a VPC with a Ubuntu server instance with Kali linux tools installed via Katoolin3.
+  Example Template for AWS: This template builds a VPC with a Ubuntu server.
 Parameters:
-  KaliInstanceType:
-    Description: Kali Linux instance type
+  UbuntuInstanceType:
+    Description: Ubuntu instance type
     Type: String
-    Default: t2.small
+    Default: t2.micro
     AllowedValues:
-      - t2.small
-    ConstraintDescription: must be a valid EC2 instance type t2.small or larger.
+      - t2.micro
   KeyName:
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
     Type: 'AWS::EC2::KeyPair::KeyName'
@@ -29,10 +28,10 @@ Mappings:
       Arch: HVM64
     t2.micro:
       Arch: HVM64
-  AWSRegionKali: # AMI for Kali in each supported region 
+  AWSRegionUbuntu: # AMI for Ubuntu server in each supported region 
     us-east-1:   # N. Virginia
       PV64: NOT_SUPPORTED
-      HVM64: ami-0a9d1fb432971483f
+      HVM64: ami-06c1d7addb12a814e
       HVMG2: NOT_SUPPORTED
     us-east-2:   # Ohio
       PV64: NOT_SUPPORTED
@@ -55,7 +54,7 @@ Resources:
         - Key: Application
           Value: !Ref 'AWS::StackId'
         - Key: Name
-          Value: CEG 4420 VPC
+          Value: WSU Example VPC
   Subnet:
     Type: 'AWS::EC2::Subnet'
     Properties:
@@ -94,13 +93,13 @@ Resources:
     Properties:
       SubnetId: !Ref Subnet
       RouteTableId: !Ref RouteTable
-  KaliIPAddress:
+  UbuntuIPAddress:
     Type: 'AWS::EC2::EIP'
     DependsOn: AttachGateway
     Properties:
       Domain: vpc
-      InstanceId: !Ref KaliInstance
-  KaliSecurityGroup:
+      InstanceId: !Ref UbuntuInstance
+  ExampleSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
       VpcId: !Ref VPC
@@ -122,36 +121,48 @@ Resources:
           FromPort: '1025'
           ToPort: '2048'
           CidrIp: 130.108.0.0/16  # WSU CIDR
-        - IpProtocol: -1
-          FromPort: '-1'
-          ToPort: '-1'
-          CidrIp: 10.0.0.0/16
-  KaliInstance:
+  UbuntuInstance:
     Type: 'AWS::EC2::Instance'
     DependsOn: AttachGateway
     Properties:
       ImageId: !FindInMap 
-        - AWSRegionKali
+        - AWSRegionUbuntu
         - !Ref 'AWS::Region'
         - !FindInMap 
           - AWSInstanceType2Arch
-          - !Ref KaliInstanceType
+          - !Ref UbuntuInstanceType
           - Arch
-      InstanceType: !Ref KaliInstanceType
+      InstanceType: !Ref UbuntuInstanceType
       KeyName: !Ref KeyName
       Tags:
         - Key: Application
           Value: !Ref 'AWS::StackId'
         - Key: Name
-          Value: 4420-Kali
+          Value: WSU Example Ubuntu
       NetworkInterfaces:
         - GroupSet:
-            - !Ref KaliSecurityGroup
+            - !Ref ExampleSecurityGroup
           AssociatePublicIpAddress: 'true'
           DeviceIndex: '0'
           DeleteOnTermination: 'true'
           SubnetId: !Ref Subnet
-          PrivateIpAddress: 10.0.0.20
-
-
+          PrivateIpAddress: 10.0.0.25
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash -xe
+            apt-get update && \
+            apt-get install -y \
+              python \
+              nmap \
+              vim \
+              git \
+              wget \
+              make \
+              cmake \
+              openjdk-11-jdk \
+              build-essential \
+              python-dev \
+              python3-dev && \
+            reboot
 

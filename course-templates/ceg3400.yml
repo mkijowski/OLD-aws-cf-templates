@@ -101,7 +101,7 @@ Resources:
         - Key: Application
           Value: !Ref 'AWS::StackId'
         - Key: Name
-          Value: CEG3400 VPC
+          Value: CEG 3400 VPC
   Subnet:
     Type: 'AWS::EC2::Subnet'
     Properties:
@@ -235,7 +235,7 @@ Resources:
         - Key: Application
           Value: !Ref 'AWS::StackId'
         - Key: Name
-          Value: CEG3400 Windows Server 2019
+          Value: CEG 3400 Windows Server 2019
       NetworkInterfaces:
         - GroupSet:
             - !Ref WS19SecurityGroup
@@ -261,7 +261,7 @@ Resources:
         - Key: Application
           Value: !Ref 'AWS::StackId'
         - Key: Name
-          Value: CEG3400 Kali
+          Value: CEG 3400 Kali
       NetworkInterfaces:
         - GroupSet:
             - !Ref KaliSecurityGroup
@@ -294,7 +294,7 @@ Resources:
         - Key: Application
           Value: !Ref 'AWS::StackId'
         - Key: Name
-          Value: CEG3400 Ubuntu
+          Value: CEG 3400 Ubuntu
       NetworkInterfaces:
         - GroupSet:
             - !Ref KaliSecurityGroup

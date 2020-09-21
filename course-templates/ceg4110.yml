@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
-  CEG-4110 AWS CloudFormation template: This template creates a VPC and adds 
+  CEG 4110: This template creates a VPC and adds 
   an EC2 instance with an Elastic IP address and a security group configured
   for CEG-4110. This template only works in US-EAST AWS regions (Virginia 
   and Ohio.  **WARNING** This template creates an Amazon EC2 instance. 
