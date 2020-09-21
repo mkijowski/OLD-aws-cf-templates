@@ -70,7 +70,7 @@ automatically fill most of the fields necessary.  You will need to enter the fol
 * Enter a CIDR formatted IP address for extra security (or keep the default of 0.0.0.0/0)
 * Accept the rest of the defaults (keep clicking next/agree/create) to finalize creation of your lab space.
 
-Most resources should provision in approximately 5 minutes (windows systeme can take > 30 minutes).
+Most resources should provision in approximately 5 minutes (Windows systems can take > 30 minutes).
 Once you have created the AWS Cloud formation stack you can [return to the EC2 service](https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#Home:).
   Here you should see additional resources have been created. 
 * [Click on Running Instances](https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#Instances:sort=instanceState)
