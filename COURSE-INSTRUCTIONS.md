@@ -75,7 +75,7 @@ a set of resources that will be created in your AWS account.  Cloud Formation li
 open in another AWS service called Cloud Formation (AWS CF).
 
 Make sure you are signed into the AWS Console (via AWS Educate), then perform the following:
-* Click on the Cloud Formation link provided to you for your course or assignment (if you are just testing use [this link]())
+* Click on the Cloud Formation link provided to you for your course or assignment (if you are just testing use [this link](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=Ubuntu-template&templateURL=https:%2F%2Fwsu-cecs-cf-templates.s3.us-east-2.amazonaws.com%2Ftemplates%2FUbuntu.yml))
 * select the SSH key you just created from the drop down menu
 * Enter a CIDR formatted IP address for extra security (or keep the default of `0.0.0.0/0`)
 * Accept the rest of the defaults (keep clicking next/agree/create) to finalize creation of your lab space.
@@ -111,7 +111,7 @@ have a better suggestion send it to Matt Kijowski).
 MobaXterm perform the following actions:
 * Create/copy the AWS private SSH key to your home directory
 * Make the key only readable by your user (`chmod 600 /path/to/private/key`)
-* Obtain the username for the system from the instructions provided to you alongside the CF link
+* Obtain the username for the system from the instructions provided to you alongside the CF link (if you used the link provided in this document, the username is `ubuntu`)
 * SSH into your AWS server with the following (replace */path/to/private/key*
   and *ElasticIP* with your information):
   `ssh -i /path/to/private/key username@ElasticIP`
