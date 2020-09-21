@@ -18,9 +18,12 @@ Note: this step is for first time students using AWS Educate only, returning stu
 skip it and Faculty need to register elsewhere.  Again, this is **not** for faculty members.
 
 Using the link emailed to you from `support@awseducate.com`, register for an 
-AWS Educate account as a student of Wright State University.  Please be sure to 
-enter a graduation date in the future, if you are unsure of your expected graduation 
+AWS Educate account as a student of Wright State University.  Please **be sure to 
+enter a graduation date in the future**, if you are unsure of your expected graduation 
 date just enter a date 5 years from today.
+
+The last field in this registration is a **Promotional Code** field, ***NOT*** a zip 
+code.  Many browser autofill programs will enter your zip code here and will cause an error.  Leave this field blank.
 
 Confirm your account via email and sign in here: https://www.awseducate.com/signin/SiteLogin
 
