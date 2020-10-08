@@ -1,14 +1,7 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
-  Testing area for AWS: This template builds a VPC with a Ubuntu server, Kali linux, and windows server instance.
+  Testing area for AWS: This template builds a VPC with 2 Ubuntu servers, and windows server 2019 instance.
 Parameters:
-  KaliInstanceType:
-    Description: Kali Linux instance type
-    Type: String
-    Default: t2.small
-    AllowedValues:
-      - t2.small
-    ConstraintDescription: must be a valid EC2 instance type t2.small or larger.
   WS19InstanceType:
     Description: Windows Server instance type
     Type: String
@@ -16,7 +9,7 @@ Parameters:
     AllowedValues:
       - t2.small
   UbuntuInstanceType:
-    Description: Windows Server instance type
+    Description: Ubuntu Server instance type
     Type: String
     Default: t2.micro
     AllowedValues:
@@ -41,23 +34,6 @@ Mappings:
       Arch: HVM64
     t2.micro:
       Arch: HVM64
-  AWSRegionKali: # AMI for Kali in each supported region 
-    us-east-1:   # N. Virginia
-      PV64: NOT_SUPPORTED
-      HVM64: ami-0a9d1fb432971483f
-      HVMG2: NOT_SUPPORTED
-    us-east-2:   # Ohio
-      PV64: NOT_SUPPORTED
-      HVM64: NOT_SUPPORTED
-      HVMG2: NOT_SUPPORTED
-    us-west-1:   # N. California
-      PV64: NOT_SUPPORTED
-      HVM64: NOT_SUPPORTED
-      HVMG2: NOT_SUPPORTED
-    us-west-2:   # Oregon
-      PV64: NOT_SUPPORTED
-      HVM64: NOT_SUPPORTED
-      HVMG2: NOT_SUPPORTED
   AWSRegionWS19: # AMI for Win Server 2019 in each supported region 
     us-east-1:   # N. Virginia
       PV64: NOT_SUPPORTED
@@ -140,25 +116,25 @@ Resources:
     Properties:
       SubnetId: !Ref Subnet
       RouteTableId: !Ref RouteTable
-  KaliIPAddress:
+  Ubuntu1IPAddress:
     Type: 'AWS::EC2::EIP'
     DependsOn: AttachGateway
     Properties:
       Domain: vpc
-      InstanceId: !Ref KaliInstance
-  UbuntuIPAddress:
+      InstanceId: !Ref Ubuntu1Instance
+  Ubuntu2IPAddress:
     Type: 'AWS::EC2::EIP'
     DependsOn: AttachGateway
     Properties:
       Domain: vpc
-      InstanceId: !Ref UbuntuInstance
+      InstanceId: !Ref Ubuntu2Instance
   WS19IPAddress:
     Type: 'AWS::EC2::EIP'
     DependsOn: AttachGateway
     Properties:
       Domain: vpc
       InstanceId: !Ref WS19Instance
-  KaliSecurityGroup:
+  LinuxSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
       VpcId: !Ref VPC
@@ -198,22 +174,14 @@ Resources:
           FromPort: '22'
           ToPort: '22'
           CidrIp: 130.108.0.0/16  # WSU CIDR
-        - IpProtocol: tcp
-          FromPort: '3389'
-          ToPort: '3389'
-          CidrIp: !Ref SSHLocation
-        - IpProtocol: tcp
+        - IpProtocol: -1
           FromPort: '3389'
           ToPort: '3389'
           CidrIp: 130.108.0.0/16  # WSU CIDR
-        - IpProtocol: udp
+        - IpProtocol: -1
           FromPort: '3389'
           ToPort: '3389'
           CidrIp: !Ref SSHLocation
-        - IpProtocol: udp
-          FromPort: '3389'
-          ToPort: '3389'
-          CidrIp: 130.108.0.0/16  # WSU CIDR
         - IpProtocol: -1
           FromPort: '-1'
           ToPort: '-1'
@@ -244,40 +212,7 @@ Resources:
           DeleteOnTermination: 'true'
           SubnetId: !Ref Subnet
           PrivateIpAddress: 10.0.0.30
-  KaliInstance:
-    Type: 'AWS::EC2::Instance'
-    DependsOn: AttachGateway
-    Properties:
-      ImageId: !FindInMap 
-        - AWSRegionKali
-        - !Ref 'AWS::Region'
-        - !FindInMap 
-          - AWSInstanceType2Arch
-          - !Ref KaliInstanceType
-          - Arch
-      InstanceType: !Ref KaliInstanceType
-      KeyName: !Ref KeyName
-      Tags:
-        - Key: Application
-          Value: !Ref 'AWS::StackId'
-        - Key: Name
-          Value: CEG 3400 Kali
-      NetworkInterfaces:
-        - GroupSet:
-            - !Ref KaliSecurityGroup
-          AssociatePublicIpAddress: 'true'
-          DeviceIndex: '0'
-          DeleteOnTermination: 'true'
-          SubnetId: !Ref Subnet
-          PrivateIpAddress: 10.0.0.20
-      UserData:
-        Fn::Base64:
-          !Sub | 
-            #!/bin/bash -xe
-            apt update && \
-            apt install -y python nmap burpsuite wireshark hashcat openvas spyder rainbowcrack pfuzz metasploit-framework hashdeep ophcrack ophcrack-cli firefox-esr vim scapy xauth ghex && \
-            reboot
-  UbuntuInstance:
+  Ubuntu1Instance:
     Type: 'AWS::EC2::Instance'
     DependsOn: AttachGateway
     Properties:
@@ -294,14 +229,66 @@ Resources:
         - Key: Application
           Value: !Ref 'AWS::StackId'
         - Key: Name
-          Value: CEG 3400 Ubuntu
+          Value: CEG 3400 Ubuntu 1
       NetworkInterfaces:
         - GroupSet:
-            - !Ref KaliSecurityGroup
+            - !Ref LinuxSecurityGroup
+          AssociatePublicIpAddress: 'true'
+          DeviceIndex: '0'
+          DeleteOnTermination: 'true'
+          SubnetId: !Ref Subnet
+          PrivateIpAddress: 10.0.0.20
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash -xe
+            apt-get update && \
+            apt-get install -y \
+              python \
+              nmap \
+              vim \
+              git \
+              wget \
+              python3-dev && \
+            reboot
+  Ubuntu2Instance:
+    Type: 'AWS::EC2::Instance'
+    DependsOn: AttachGateway
+    Properties:
+      ImageId: !FindInMap 
+        - AWSRegionUbuntu
+        - !Ref 'AWS::Region'
+        - !FindInMap 
+          - AWSInstanceType2Arch
+          - !Ref UbuntuInstanceType
+          - Arch
+      InstanceType: !Ref UbuntuInstanceType
+      KeyName: !Ref KeyName
+      Tags:
+        - Key: Application
+          Value: !Ref 'AWS::StackId'
+        - Key: Name
+          Value: CEG 3400 Ubuntu 2
+      NetworkInterfaces:
+        - GroupSet:
+            - !Ref LinuxSecurityGroup
           AssociatePublicIpAddress: 'true'
           DeviceIndex: '0'
           DeleteOnTermination: 'true'
           SubnetId: !Ref Subnet
           PrivateIpAddress: 10.0.0.25
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash -xe
+            apt-get update && \
+            apt-get install -y \
+              python \
+              nmap \
+              vim \
+              git \
+              wget \
+              python3-dev && \
+            reboot
 
 
