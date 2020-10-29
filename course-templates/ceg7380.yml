@@ -3,7 +3,7 @@ Description: >-
   CEG 7380: This template builds a VPC with a Ubuntu server.
 Parameters:
   UbuntuInstanceType:
-    Description: Windows Server instance type
+    Description: Ubuntu instance type
     Type: String
     Default: t2.micro
     AllowedValues:
@@ -147,4 +147,10 @@ Resources:
           DeleteOnTermination: 'true'
           SubnetId: !Ref Subnet
           PrivateIpAddress: 10.0.0.25
+      BlockDeviceMappings:
+          - DeviceName: /dev/sda1
+            Ebs:
+              VolumeType: 'gp2'
+              VolumeSize: '24'
+              Encrypted: 'false'
 
