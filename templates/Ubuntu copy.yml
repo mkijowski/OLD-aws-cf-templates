@@ -99,6 +99,12 @@ Resources:
     Properties:
       Domain: vpc
       InstanceId: !Ref UbuntuInstance
+  UbuntuIPAddress2:
+    Type: 'AWS::EC2::EIP'
+    DependsOn: AttachGateway
+    Properties:
+      Domain: vpc
+      InstanceId: !Ref UbuntuInstance2
   ExampleSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
@@ -143,6 +149,56 @@ Resources:
           DeleteOnTermination: 'true'
           SubnetId: !Ref Subnet
           PrivateIpAddress: 10.0.0.25
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash -xe
+            apt-get update && \
+            apt-get install -y \
+              python \
+              nmap \
+              vim \
+              git \
+              wget \
+              make \
+              cmake \
+              openjdk-11-jdk \
+              build-essential \
+              python-dev \
+              python3-dev && \
+            reboot
+      BlockDeviceMappings:
+          - DeviceName: /dev/sda1
+            Ebs:
+              VolumeType: 'gp2'
+              VolumeSize: '24'
+              Encrypted: 'false'
+  UbuntuInstance2:
+    Type: 'AWS::EC2::Instance'
+    DependsOn: AttachGateway
+    Properties:
+      ImageId: !FindInMap 
+        - AWSRegionUbuntu
+        - !Ref 'AWS::Region'
+        - !FindInMap 
+          - AWSInstanceType2Arch
+          - !Ref UbuntuInstanceType
+          - Arch
+      InstanceType: !Ref UbuntuInstanceType
+      KeyName: !Ref KeyName
+      Tags:
+        - Key: Application
+          Value: !Ref 'AWS::StackId'
+        - Key: Name
+          Value: WSU Example Ubuntu 2
+      NetworkInterfaces:
+        - GroupSet:
+            - !Ref ExampleSecurityGroup
+          AssociatePublicIpAddress: 'true'
+          DeviceIndex: '0'
+          DeleteOnTermination: 'true'
+          SubnetId: !Ref Subnet
+          PrivateIpAddress: 10.0.0.30
       UserData:
         Fn::Base64:
           !Sub |
