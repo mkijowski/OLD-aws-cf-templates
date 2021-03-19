@@ -219,7 +219,6 @@ Resources:
               VolumeType: 'gp2'
               VolumeSize: '16'
               Encrypted: 'false'
-      BlockDeviceMappings:
           - DeviceName: /dev/sdb
             Ebs:
               VolumeType: 'gp2'
