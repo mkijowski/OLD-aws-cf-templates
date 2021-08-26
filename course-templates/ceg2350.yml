@@ -152,5 +152,5 @@ Resources:
           - DeviceName: /dev/sdb
             Ebs:
               VolumeType: 'gp2'
-              VolumeSize: '16'
+              VolumeSize: '4'
               Encrypted: 'false'
