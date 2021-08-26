@@ -143,6 +143,14 @@ Resources:
               python-dev \
               python3-dev && \
             reboot
-
-
-
+        BlockDeviceMappings:
+          - DeviceName: /dev/sda1
+            Ebs:
+              VolumeType: 'gp2'
+              VolumeSize: '16'
+              Encrypted: 'false'
+          - DeviceName: /dev/sdb
+            Ebs:
+              VolumeType: 'gp2'
+              VolumeSize: '16'
+              Encrypted: 'false'
