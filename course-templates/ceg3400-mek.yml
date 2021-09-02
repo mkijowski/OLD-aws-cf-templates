@@ -1,0 +1,170 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Testing area for AWS: This template builds a VPC with 2 Ubuntu servers, and windows server 2019 instance.
+Parameters:
+  UbuntuInstanceType:
+    Description: Ubuntu Server instance type
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+  SSHLocation:
+    Description: ' The IP address range that can be used to access the EC2 instance'
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    Default: 0.0.0.0/0
+    AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+Mappings:
+  AWSInstanceType2Arch:  # Supported architectures (x64bit only)
+    t2.small:
+      Arch: HVM64
+    t2.small:
+      Arch: HVM64
+    t2.micro:
+      Arch: HVM64
+  AWSRegionUbuntu: # AMI for Ubuntu server in each supported region 
+    us-east-1:   # N. Virginia
+      PV64: NOT_SUPPORTED
+      HVM64: ami-06c1d7addb12a814e
+      HVMG2: NOT_SUPPORTED
+    us-east-2:   # Ohio
+      PV64: NOT_SUPPORTED
+      HVM64: NOT_SUPPORTED
+      HVMG2: NOT_SUPPORTED
+    us-west-1:   # N. California
+      PV64: NOT_SUPPORTED
+      HVM64: NOT_SUPPORTED
+      HVMG2: NOT_SUPPORTED
+    us-west-2:   # Oregon
+      PV64: NOT_SUPPORTED
+      HVM64: NOT_SUPPORTED
+      HVMG2: NOT_SUPPORTED
+Resources:
+  VPC:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      Tags:
+        - Key: Application
+          Value: !Ref 'AWS::StackId'
+        - Key: Name
+          Value: CEG 3400 VPC
+  Subnet:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.0.0/24
+      Tags:
+        - Key: Application
+          Value: !Ref 'AWS::StackId'
+  InternetGateway:
+    Type: 'AWS::EC2::InternetGateway'
+    Properties:
+      Tags:
+        - Key: Application
+          Value: !Ref 'AWS::StackId'
+  AttachGateway:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+  RouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Application
+          Value: !Ref 'AWS::StackId'
+  Route:
+    Type: 'AWS::EC2::Route'
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  SubnetRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref Subnet
+      RouteTableId: !Ref RouteTable
+  Ubuntu1IPAddress:
+    Type: 'AWS::EC2::EIP'
+    DependsOn: AttachGateway
+    Properties:
+      Domain: vpc
+      InstanceId: !Ref Ubuntu1Instance
+  LinuxSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Enable SSH access via port 22 and open ports 1025 through 2048.
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: !Ref SSHLocation
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 130.108.0.0/16  # WSU CIDR
+        - IpProtocol: tcp
+          FromPort: '1025'
+          ToPort: '2048'
+          CidrIp: !Ref SSHLocation
+        - IpProtocol: tcp
+          FromPort: '1025'
+          ToPort: '2048'
+          CidrIp: 130.108.0.0/16  # WSU CIDR
+        - IpProtocol: -1
+          FromPort: '-1'
+          ToPort: '-1'
+          CidrIp: 10.0.0.0/16
+  Ubuntu1Instance:
+    Type: 'AWS::EC2::Instance'
+    DependsOn: AttachGateway
+    Properties:
+      ImageId: !FindInMap 
+        - AWSRegionUbuntu
+        - !Ref 'AWS::Region'
+        - !FindInMap 
+          - AWSInstanceType2Arch
+          - !Ref UbuntuInstanceType
+          - Arch
+      InstanceType: !Ref UbuntuInstanceType
+      KeyName: !Ref KeyName
+      Tags:
+        - Key: Application
+          Value: !Ref 'AWS::StackId'
+        - Key: Name
+          Value: CEG 3400 Ubuntu
+      NetworkInterfaces:
+        - GroupSet:
+            - !Ref LinuxSecurityGroup
+          AssociatePublicIpAddress: 'true'
+          DeviceIndex: '0'
+          DeleteOnTermination: 'true'
+          SubnetId: !Ref Subnet
+          PrivateIpAddress: 10.0.0.20
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash -xe
+            apt-get update && \
+            apt-get install -y \
+              vim \
+              git \
+              wget \
+              openssl
+      BlockDeviceMappings:
+          - DeviceName: /dev/sda1
+            Ebs:
+              VolumeType: 'gp2'
+              VolumeSize: '16'
+              Encrypted: 'false'
+
