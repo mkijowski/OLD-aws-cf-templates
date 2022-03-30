@@ -1,13 +1,14 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
-  CEG 2410 Initial testing area for AWS: This template builds a VPC with 1 Ubuntu server, and 1 Windows Server 2019.
+  CEG 2410 This template builds a VPC with 1 Ubuntu server, and 1 Windows Server 2019.
 Parameters:
   WS19InstanceType:
     Description: Windows Server instance type
     Type: String
-    Default: t2.small
+    Default: t2.medium
     AllowedValues:
       - t2.small
+      - t2.medium
   UbuntuInstanceType:
     Description: Ubuntu Server instance type
     Type: String
@@ -19,7 +20,7 @@ Parameters:
     Type: 'AWS::EC2::KeyPair::KeyName'
     ConstraintDescription: must be the name of an existing EC2 KeyPair.
   SSHLocation:
-    Description: ' The IP address range that can be used to access the EC2 instance'
+    Description: 'This should be a trusted IP (/32) or IP range.  Rules are already set for inbound access from WSU'
     Type: String
     MinLength: '9'
     MaxLength: '18'
@@ -30,19 +31,19 @@ Mappings:
   AWSInstanceType2Arch:  # Supported architectures (x64bit only)
     t2.small:
       Arch: HVM64
-    t2.small:
+    t2.medium:
       Arch: HVM64
     t2.micro:
       Arch: HVM64
-  AWSRegionWS19: # AMI for Win Server 2019 in each supported region 
+  AWSRegionWS19: # AMI for Win Server 2019
     us-east-1:   # N. Virginia
       PV64: NOT_SUPPORTED
-      HVM64: ami-0d42fc1154bb95f55
+      HVM64: ami-0f9a92942448ac56f # OLD: ami-0d42fc1154bb95f55
       HVMG2: NOT_SUPPORTED
-  AWSRegionUbuntu: # AMI for Ubuntu server in each supported region 
+  AWSRegionUbuntu: # AMI for Ubuntu server 
     us-east-1:   # N. Virginia
       PV64: NOT_SUPPORTED
-      HVM64: ami-06c1d7addb12a814e
+      HVM64: ami-04505e74c0741db8d # OLD: ami-06c1d7addb12a814e
       HVMG2: NOT_SUPPORTED
 Resources:
   VPC:
@@ -104,46 +105,36 @@ Resources:
     Properties:
       Domain: vpc
       InstanceId: !Ref WS19Instance
-  LinuxSecurityGroup:
+  LinuxWindowsSG:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
       VpcId: !Ref VPC
       GroupDescription: Enable SSH access via port 22 and open ports 1025 through 2048.
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: '22'
-          ToPort: '22'
-          CidrIp: !Ref SSHLocation
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
-          FromPort: '389'
-          ToPort: '389'
-          CidrIp: !Ref SSHLocation
-        - IpProtocol: tcp
-          FromPort: '636'
-          ToPort: '636'
-          CidrIp: !Ref SSHLocation
-        - IpProtocol: tcp
-          FromPort: '1025'
-          ToPort: '2048'
-          CidrIp: !Ref SSHLocation
-        - IpProtocol: -1
-          FromPort: '-1'
-          ToPort: '-1'
-          CidrIp: 10.0.0.0/16
-  WS19SecurityGroup:
-    Type: 'AWS::EC2::SecurityGroup'
-    Properties:
-      VpcId: !Ref VPC
-      GroupDescription: Enable SSH access via port 22 and Remote desktop via port 3389.
-      SecurityGroupIngress:
+          FromPort: '443'
+          ToPort: '443'
+          CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: '22'
           ToPort: '22'
           CidrIp: !Ref SSHLocation
-        - IpProtocol: -1
+        - IpProtocol: tcp
           FromPort: '3389'
           ToPort: '3389'
           CidrIp: !Ref SSHLocation
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 130.108.0.0/16
+        - IpProtocol: tcp
+          FromPort: '3389'
+          ToPort: '3389'
+          CidrIp: 130.108.0.0/16
         - IpProtocol: -1
           FromPort: '-1'
           ToPort: '-1'
@@ -165,15 +156,15 @@ Resources:
         - Key: Application
           Value: !Ref 'AWS::StackId'
         - Key: Name
-          Value: CEG 2410 Windows Server 2019
+          Value: CEG 2410 WS 2019
       NetworkInterfaces:
         - GroupSet:
-            - !Ref WS19SecurityGroup
+            - !Ref LinuxWindowsSG
           AssociatePublicIpAddress: 'true'
           DeviceIndex: '0'
           DeleteOnTermination: 'true'
           SubnetId: !Ref Subnet
-          PrivateIpAddress: 10.0.0.30
+          PrivateIpAddress: 10.0.0.10
   Ubuntu1Instance:
     Type: 'AWS::EC2::Instance'
     DependsOn: AttachGateway
@@ -194,7 +185,7 @@ Resources:
           Value: CEG 2410 Ubuntu
       NetworkInterfaces:
         - GroupSet:
-            - !Ref LinuxSecurityGroup
+            - !Ref LinuxWindowsSG
           AssociatePublicIpAddress: 'true'
           DeviceIndex: '0'
           DeleteOnTermination: 'true'
@@ -206,21 +197,8 @@ Resources:
             #!/bin/bash -xe
             apt-get update && \
             apt-get install -y \
-              python \
               nmap \
               vim \
               git \
-              wget \
-              python3-dev && \
+              wget && \
             reboot
-      BlockDeviceMappings:
-          - DeviceName: /dev/sda1
-            Ebs:
-              VolumeType: 'gp2'
-              VolumeSize: '16'
-              Encrypted: 'false'
-          - DeviceName: /dev/sdb
-            Ebs:
-              VolumeType: 'gp2'
-              VolumeSize: '4'
-              Encrypted: 'false'
