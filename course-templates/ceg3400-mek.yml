@@ -117,6 +117,10 @@ Resources:
           FromPort: '1025'
           ToPort: '2048'
           CidrIp: !Ref SSHLocation
+        - IpProtocol: icmp
+          FromPort: '-1'
+          ToPort: '-1'
+          CidrIp: !Ref SSHLocation
         - IpProtocol: tcp
           FromPort: '1025'
           ToPort: '2048'
