@@ -21,7 +21,7 @@ Mappings:
   AWSRegionUbuntu: # AMI for Ubuntu server in each supported region 
     us-east-1:   # N. Virginia
       PV64: NOT_SUPPORTED
-      HVM64: ami-07d0cf3af28718ef8
+      HVM64: ami-06878d265978313ca
       HVMG2: NOT_SUPPORTED
 Resources:
   VPC:
@@ -83,17 +83,9 @@ Resources:
       VpcId: !Ref VPC
       GroupDescription: Enable SSH access via port 22 and open all insternal ports.
       SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: '22'
-          ToPort: '22'
-          CidrIp: !Ref SSHLocation
-        - IpProtocol: tcp
-          FromPort: '22'
-          ToPort: '22'
-          CidrIp: 130.108.0.0/16  # WSU CIDR
         - IpProtocol: -1
-          FromPort: '-1'
-          ToPort: '-1'
+          FromPort: '1'
+          ToPort: '65535'
           CidrIp: 10.0.0.0/24
         - IpProtocol: tcp
           FromPort: '1'
